@@ -1,14 +1,48 @@
-import IPainter from "./IPainter.js";
+import { IPainter } from "./IPainter.js";
+import { IDocument } from "./IDocument.js";
 
 class IWindow {
     constructor(window_painter) {
         this.m_window_painter = window_painter;
+        this.m_document = new IDocument(this);
         this.m_window_width = 0;
         this.m_window_height = 0;
         this.m_refresh_viewport_x = 0;
         this.m_refresh_viewport_y = 0;
         this.m_refresh_viewport_width = 0;
         this.m_refresh_viewport_height = 0;
+
+        this.Render();
+    }
+
+    // inline methods
+    GetWindowWidth() { return this.m_window_width; }
+    GetWindowHeight() { return this.m_window_height; }
+    GetWindowPainter() { return this.m_window_painter; }
+
+    // virtual methods
+    Render() {
+        const window_painter = this.m_window_painter;
+        if (this.m_refresh_viewport_width === 0 || this.m_refresh_viewport_height === 0) {
+            return;
+        } else {
+            const refresh_viewport_x = this.m_refresh_viewport_x;
+            const refresh_viewport_y = this.m_refresh_viewport_y;
+            const refresh_viewport_width = this.m_refresh_viewport_width;
+            const refresh_viewport_height = this.m_refresh_viewport_height;
+            this.m_refresh_viewport_x = 0;
+            this.m_refresh_viewport_y = 0;
+            this.m_refresh_viewport_width = 0;
+            this.m_refresh_viewport_height = 0;
+            window_painter.Save();
+            window_painter.Clip(refresh_viewport_x, refresh_viewport_y, refresh_viewport_width, refresh_viewport_height);
+            // 绘制文档
+            this.m_document.Render(this.m_window_painter);
+            window_painter.Restore();
+        }
+        Promise.resolve().then(() => {
+            this.Render();
+        });
     }
 
     Refresh(x, y, width, height) {

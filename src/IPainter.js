@@ -1,7 +1,20 @@
 
 // IPainter.js 
-// 定义窗口绘制接口
-// 负责窗口的绘制工作
+// canvas 是与窗口非常类似的一个元素
+// 因为其具备交互与绘制能力， 交互主要是指鼠标与键盘事件
+// 要实现GUI框架， 绘制类是不可或缺的
+// 当前文件定义绘制类，实现常用的绘制接口，主要有：
+// 绘制线条、三角形、矩形、圆角矩形、圆弧、扇形、多边形和文本等
+// 填充三角形、矩形、圆角矩形、圆弧、扇形、多边形和文本等
+// 裁剪，保存和恢复绘制状态
+// 平移、旋转和缩放等变换操作
+// 测量文本宽度
+
+// 该类依赖于HTML5的CanvasRenderingContext2D对象
+// 该对象提供了丰富的2D绘制功能
+// 通过封装这些功能， 提供一个统一的绘制接口
+// 方便在不同的窗口中使用
+
 class IPainter {
     constructor(rendering_context_2d) {
         this.m_rendering_context_2d = rendering_context_2d; // CanvasRenderingContext2D 具体绘制上下文
@@ -189,6 +202,13 @@ class IPainter {
         ctx.fillText(text, x, y);
     }
 
+    // 测量文本宽度
+    MeasureText(text, font) {
+        const ctx = this.GetRenderingContext2D();
+        ctx.font = font;
+        return ctx.measureText(text);
+    }
+
     // 保存当前状态
     Save() {
         const ctx = this.GetRenderingContext2D();
@@ -246,15 +266,17 @@ class IPainter {
         this.StrokeTriangle(10, 300, 60, 350, 10, 350, 'brown', 2);
         this.FillTriangle(120, 300, 170, 350, 120, 350, 'burlywood');
         // 测试多边形
-        this.StrokePolygon([{x: 10, y: 400}, {x: 60, y: 450}, {x: 40, y: 500}, {x: 20, y: 450}], 'cyan', 2);
-        this.FillPolygon([{x: 120, y: 400}, {x: 170, y: 450}, {x: 150, y: 500}, {x: 130, y: 450}], 'lightcyan');
+        this.StrokePolygon([{ x: 10, y: 400 }, { x: 60, y: 450 }, { x: 40, y: 500 }, { x: 20, y: 450 }], 'cyan', 2);
+        this.FillPolygon([{ x: 120, y: 400 }, { x: 170, y: 450 }, { x: 150, y: 500 }, { x: 130, y: 450 }], 'lightcyan');
         // 测试文本
         this.StrokeText('Hello, Stroke Text!', 10, 550, '50px Arial', 'black');
         this.FillText('Hello, Fill Text!', 10, 600, '50px Arial', 'gray');
+
+        console.log(this.MeasureText('Hello, Measure Text!', '20px Arial'));
     }
 }
 
-export default IPainter;// 该接口定义了各种绘制方法，如绘制线条、矩形、圆角矩形、圆弧、扇形、多边形和文本等
+export { IPainter };// 该接口定义了各种绘制方法，如绘制线条、矩形、圆角矩形、圆弧、扇形、多边形和文本等
 // 每个方法都接受相应的参数，如位置、尺寸、颜色和线宽等
 // 这些方法使用CanvasRenderingContext2D对象进行实际的绘制操作
 // 通过实现该接口，可以为不同的窗口提供自定义的绘制逻辑

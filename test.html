@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国旗飘动动画</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+            position: relative;
+        }
+        canvas {
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .controls {
+            margin-top: 20px;
+            color: white;
+        }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>国旗飘动动画</h1>
+        <canvas id="flagCanvas" width="600" height="400"></canvas>
+        <div class="controls">
+            <button id="speedUp">加速</button>
+            <button id="speedDown">减速</button>
+            <button id="toggleAnimation">暂停</button>
+        </div>
+    </div>
+
+    <script>
+        // 获取Canvas元素和上下文
+        const canvas = document.getElementById('flagCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 动画控制变量
+        let animationId = null;
+        let isAnimating = true;
+        let waveSpeed = 0.05;
+        let waveHeight = 15;
+        let time = 0;
+        
+        // 国旗尺寸和位置
+        const flagWidth = 500;
+        const flagHeight = 300;
+        const flagX = (canvas.width - flagWidth) / 2;
+        const flagY = (canvas.height - flagHeight) / 2;
+        
+        // 绘制国旗函数
+        function drawFlag() {
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制背景
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#1a2a6c');
+            gradient.addColorStop(0.5, '#b21f1f');
+            gradient.addColorStop(1, '#fdbb2d');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制旗杆
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(flagX - 10, flagY, 20, flagHeight);
+            
+            // 绘制旗杆顶部装饰
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(flagX, flagY, 15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 绘制飘动的国旗
+            ctx.beginPath();
+            
+            // 国旗左侧（固定在旗杆上）
+            ctx.moveTo(flagX, flagY);
+            
+            // 绘制国旗上边缘（波浪效果）
+            for (let x = 0; x <= flagWidth; x += 10) {
+                // 使用正弦波创建波浪效果
+                const wave = Math.sin(x * 0.05 + time) * waveHeight;
+                ctx.lineTo(flagX + x, flagY + wave);
+            }
+            
+            // 绘制国旗下边缘（波浪效果）
+            for (let x = flagWidth; x >= 0; x -= 10) {
+                // 下边缘波浪与上边缘相位不同
+                const wave = Math.sin(x * 0.05 + time + Math.PI) * waveHeight;
+                ctx.lineTo(flagX + x, flagY + flagHeight + wave);
+            }
+            
+            // 闭合路径
+            ctx.closePath();
+            
+            // 创建国旗渐变
+            const flagGradient = ctx.createLinearGradient(flagX, flagY, flagX + flagWidth, flagY);
+            flagGradient.addColorStop(0, '#DE2910'); // 红色
+            flagGradient.addColorStop(0.2, '#FFDE00'); // 黄色
+            flagGradient.addColorStop(0.4, '#DE2910'); // 红色
+            flagGradient.addColorStop(0.6, '#FFDE00'); // 黄色
+            flagGradient.addColorStop(0.8, '#DE2910'); // 红色
+            flagGradient.addColorStop(1, '#FFDE00'); // 黄色
+            
+            // 填充国旗
+            ctx.fillStyle = flagGradient;
+            ctx.fill();
+            
+            // 绘制五角星
+            drawStar(flagX + flagWidth * 0.2, flagY + flagHeight * 0.3, 30, '#FFDE00');
+            drawStar(flagX + flagWidth * 0.35, flagY + flagHeight * 0.2, 15, '#FFDE00');
+            drawStar(flagX + flagWidth * 0.35, flagY + flagHeight * 0.45, 15, '#FFDE00');
+            drawStar(flagX + flagWidth * 0.45, flagY + flagHeight * 0.3, 15, '#FFDE00');
+            drawStar(flagX + flagWidth * 0.45, flagY + flagHeight * 0.5, 15, '#FFDE00');
+        }
+        
+        // 绘制五角星函数
+        function drawStar(cx, cy, radius, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                const x = cx + radius * Math.cos(angle);
+                const y = cy + radius * Math.sin(angle);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                
+                // 内角点
+                const innerAngle = angle + Math.PI / 5;
+                const innerX = cx + (radius / 2) * Math.cos(innerAngle);
+                const innerY = cy + (radius / 2) * Math.sin(innerAngle);
+                ctx.lineTo(innerX, innerY);
+            }
+            
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // 动画循环
+        function animate() {
+            time += waveSpeed;
+            drawFlag();
+            
+            if (isAnimating) {
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+        
+        // 开始动画
+        animate();
+        
+        // 添加控制按钮事件监听
+        document.getElementById('speedUp').addEventListener('click', () => {
+            waveSpeed += 0.01;
+        });
+        
+        document.getElementById('speedDown').addEventListener('click', () => {
+            if (waveSpeed > 0.01) {
+                waveSpeed -= 0.01;
+            }
+        });
+        
+        document.getElementById('toggleAnimation').addEventListener('click', () => {
+            isAnimating = !isAnimating;
+            document.getElementById('toggleAnimation').textContent = isAnimating ? '暂停' : '继续';
+            
+            if (isAnimating) {
+                animate();
+            } else {
+                cancelAnimationFrame(animationId);
+            }
+        });
+    </script>
+</body>
+</html>
