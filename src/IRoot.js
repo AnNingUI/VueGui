@@ -1,17 +1,25 @@
 import { IElement } from "./IElement.js";
 
-class IDocument extends IElement {
+class IRoot extends IElement {
     constructor(window) {
-        super(window);
-        this.m_tagname = "Document";
-        this.m_background_color = 'white';
+        super();
+        this.SetWindow(window);
+        this.SetRoot(this);
+        this.SetTagName("Root");
+        // this.SetBackgroundColor('white');
+        this.SetBackgroundColor('red');
+        // this.SetBackgroundColor('green');
     }
 
     UpdateLayout() {
-        SetLocalX(0);
-        SetLocalY(0);
-        SetLocalWidth(GetWindowWidth());
-        SetLocalHeight(GetWindowHeight());
+        const window_width = this.GetWindowWidth();
+        const window_height = this.GetWindowHeight();
+
+        this.SetLayoutChanged(false);
+        this.SetLocalX(0);
+        this.SetLocalY(0);
+        this.SetLocalWidth(window_width);
+        this.SetLocalHeight(window_height);
 
         const childrens = this.GetChildrens();
         for (let i = 0; i < childrens.length; i++) {
@@ -60,13 +68,6 @@ class IDocument extends IElement {
             }
         }
     }
-
-    CreateElementByTagName(tagname) {
-        const window = this.GetWindow();
-        if (tagname === "Element") {
-            return new IElement(window);
-        }
-    }
 }
 
-export { IDocument };
+export { IRoot };

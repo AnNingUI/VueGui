@@ -1,50 +1,59 @@
 import { IPainter } from "./IPainter.js";
-import { IDocument } from "./IDocument.js";
+import { IRoot } from "./IRoot.js";
 
 class IWindow {
     constructor(window_painter) {
+        // 窗口画刷
         this.m_window_painter = window_painter;
-        this.m_document = new IDocument(this);
+
+        // 窗口大小
         this.m_window_width = 0;
         this.m_window_height = 0;
+
+        // 下一帧的刷新视口
         this.m_refresh_viewport_x = 0;
         this.m_refresh_viewport_y = 0;
         this.m_refresh_viewport_width = 0;
         this.m_refresh_viewport_height = 0;
 
-        this.Render();
+        // 窗口根元素
+        this.m_root = new IRoot(this);
     }
 
     // inline methods
     GetWindowWidth() { return this.m_window_width; }
     GetWindowHeight() { return this.m_window_height; }
     GetWindowPainter() { return this.m_window_painter; }
+    GetRoot() { return this.m_root; }
 
     // virtual methods
+    // 重绘需要刷新的区域
     Render() {
-        const window_painter = this.m_window_painter;
+        const window_painter = this.GetWindowPainter();
+        const root = this.GetRoot();
         if (this.m_refresh_viewport_width === 0 || this.m_refresh_viewport_height === 0) {
-            return;
+
         } else {
+            // 获取刷新视口
             const refresh_viewport_x = this.m_refresh_viewport_x;
             const refresh_viewport_y = this.m_refresh_viewport_y;
             const refresh_viewport_width = this.m_refresh_viewport_width;
             const refresh_viewport_height = this.m_refresh_viewport_height;
+            // 重置刷新视口
             this.m_refresh_viewport_x = 0;
             this.m_refresh_viewport_y = 0;
             this.m_refresh_viewport_width = 0;
             this.m_refresh_viewport_height = 0;
+            // 绘制元素
             window_painter.Save();
             window_painter.Clip(refresh_viewport_x, refresh_viewport_y, refresh_viewport_width, refresh_viewport_height);
-            // 绘制文档
-            this.m_document.Render(this.m_window_painter);
+            root.Render(window_painter);
             window_painter.Restore();
         }
-        Promise.resolve().then(() => {
-            this.Render();
-        });
     }
 
+    // 刷新窗口的局部区域
+    // 合并调用的所有局部区域获的刷新区域的最小包围盒， 也就是下一帧需要绘制的区域
     Refresh(x, y, width, height) {
         const window_width = this.m_window_width;
         const window_height = this.m_window_height;
@@ -62,24 +71,32 @@ class IWindow {
             const min_refresh_y = this.m_refresh_viewport_y;
             const max_refresh_x = this.m_refresh_viewport_x + this.m_refresh_viewport_width;
             const max_refresh_y = this.m_refresh_viewport_y + this.m_refresh_viewport_height;
-            max_x = Math.min(max_x, max_refresh_x, window_width);
-            max_y = Math.min(max_y, max_refresh_y, window_height);
-            min_x = Math.max(min_x, min_refresh_x, 0);
-            min_y = Math.max(min_y, min_refresh_y, 0);
+            max_x = Math.min(Math.max(max_x, max_refresh_x), window_width);
+            max_y = Math.min(Math.max(max_y, max_refresh_y), window_height);
+            min_x = Math.max(Math.min(min_x, min_refresh_x), 0);
+            min_y = Math.max(Math.min(min_y, min_refresh_y), 0);
         }
         this.m_refresh_viewport_x = min_x;
         this.m_refresh_viewport_y = min_y;
-        this.m_refresh_viewport_width = Math.max(0, max_x - min_x);
-        this.m_refresh_viewport_height = Math.max(0, max_y - min_y);
+        this.m_refresh_viewport_width = max_x - min_x;
+        this.m_refresh_viewport_height = max_y - min_y;
     }
 
-    OnResize(width, height) {
+    // 窗口大小更新
+    OnSize(width, height) {
+        if (this.m_window_width == width || this.m_window_height == height) {
+            return;
+        }
+        // 保存窗口大小
         this.m_window_width = width;
         this.m_window_height = height;
+        // 设置刷新视口
         this.m_refresh_viewport_x = 0;
         this.m_refresh_viewport_y = 0;
         this.m_refresh_viewport_width = this.m_window_width;
         this.m_refresh_viewport_height = this.m_window_height;
+        // 标记布局更新
+        this.GetRoot().SetLayoutChanged(true);
     }
 
     OnMouseDown(x, y, button) {
@@ -111,11 +128,10 @@ class CanvasWindow extends IWindow {
     constructor(canvas) {
         super(new IPainter(canvas.getContext('2d')));
         this.m_canvas = canvas;
-        this.m_window_width = canvas.width;
-        this.m_window_height = canvas.height;
 
+        this.OnSize(canvas.width, canvas.height);
         canvas.addEventListener('resize', (e) => {
-            this.OnResize(canvas.width, canvas.height);
+            this.OnSize(canvas.width, canvas.height);
         });
         canvas.addEventListener('mousedown', (e) => {
             this.OnMouseDown(e.offsetX, e.offsetY, e.button);
@@ -129,10 +145,10 @@ class CanvasWindow extends IWindow {
         canvas.addEventListener('wheel', (e) => {
             this.OnMouseWheel(e.deltaY);
         });
-        window.addEventListener('keydown', (e) => {
+        canvas.addEventListener('keydown', (e) => {
             this.OnKeyDown(e.key);
         });
-        window.addEventListener('keyup', (e) => {
+        canvas.addEventListener('keyup', (e) => {
             this.OnKeyUp(e.key);
         });
     }
