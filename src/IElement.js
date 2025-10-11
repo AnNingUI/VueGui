@@ -1,6 +1,6 @@
 
 import { IInlineSelectorStyle, IStyleItem } from "./IStyle.js";
-import { IFixedLayout, IFixedLayoutInputItem, IFixedLayoutOutputItem } from "./ILayout.js";
+import { IFixedLayout, IFixedLayoutInputItem, IBoxLayout, IBoxLayoutInputItem } from "./ILayout.js";
 
 class IElement {
     constructor() {
@@ -21,12 +21,12 @@ class IElement {
         this.m_scroll_y = 0;
         this.m_local_x = 0;
         this.m_local_y = 0;
-        this.m_local_width = 0;
-        this.m_local_height = 0;
+        this.m_local_width = -1;
+        this.m_local_height = -1;
         this.m_local_content_width = 0;
         this.m_local_content_height = 0;
-        this.m_style_width = 0;
-        this.m_style_height = 0;
+        this.m_style_width = -1;
+        this.m_style_height = -1;
         this.m_padding_left = 0;
         this.m_padding_top = 0;
         this.m_padding_right = 0;
@@ -222,6 +222,10 @@ class IElement {
     GetSpaceHeight() { return this.m_local_height + this.m_margin_top + this.m_margin_bottom; }
     GetPaddingBorderWidth() { return this.m_padding_left + this.m_padding_right + this.m_border_left_width + this.m_border_right_width; }
     GetPaddingBorderHeight() { return this.m_padding_top + this.m_padding_bottom + this.m_border_top_width + this.m_border_bottom_width; }
+    GetLeftPaddingBorderSize() { return this.m_padding_left + this.m_border_left_width; }
+    GetRightPaddingBorderSize() { return this.m_padding_right + this.m_border_right_width; }
+    GetTopPaddingBorderSize() { return this.m_padding_top + this.m_border_top_width; }
+    GetBottomPaddingBorderSize() { return this.m_padding_bottom + this.m_border_bottom_width; }
     // 定位    
     SetZIndex(z_index) { this.m_z_index = z_index; }
     GetZIndex() { return this.m_z_index; }
@@ -407,7 +411,7 @@ class IElement {
         if (style_width >= 0) return style_width;
         // 元素宽高没有被设置, 则返回父元素宽高
         const parent = this.GetParent();
-        layout_width = parent == null ? 0 : (parent.GetLocalMaxContentWidth() - this.GetMarginLeft() - this.GetMarginRight());
+        const layout_width = parent == null ? 0 : (parent.GetLocalMaxContentWidth() - this.GetMarginLeft() - this.GetMarginRight());
         return layout_width < 0 ? 0 : layout_width;
     }
 
@@ -419,9 +423,79 @@ class IElement {
         if (style_height >= 0) return style_height;
         // 元素宽高没有被设置, 则返回父元素宽高
         const parent = this.GetParent();
-        layout_height = parent == null ? 0 : (parent.GetLocalMaxContentHeight() - this.GetMarginTop() - this.GetMarginBottom());
+        const layout_height = parent == null ? 0 : (parent.GetLocalMaxContentHeight() - this.GetMarginTop() - this.GetMarginBottom());
         return layout_height < 0 ? 0 : layout_height;
 
+    }
+
+    UpdateBoxLayout() {
+        const layout_width = this.GetLayoutWidth();
+        const layout_height = this.GetLayoutHeight();
+        const is_auto_height = this.GetLocalHeight() < 0 && this.GetStyleHeight() < 0;
+
+        this.SetLocalWidth(layout_width);
+        this.SetLocalHeight(layout_height);
+
+        const layout = new IBoxLayout();
+        let local_max_content_width = this.GetLocalMaxContentWidth();
+        let local_max_content_height = this.GetLocalMaxContentHeight();
+        local_max_content_width = local_max_content_width < 0 ? 0 : local_max_content_width;
+        local_max_content_height = local_max_content_height < 0 ? 0 : local_max_content_height;
+        layout.m_width  = local_max_content_width;
+        layout.m_height = local_max_content_height;
+
+        const input_items = [];
+        const childrens = this.GetChildrens();
+        for (let i = 0; i < childrens.length; i++) {
+            const children = childrens[i];
+            const children_styles = children.GetStyles();
+            if (children.IsVisible()) {
+                children.SetLocalX(-1);
+                children.SetLocalY(-1);
+                children.SetLocalWidth(-1);
+                children.SetLocalHeight(-1);
+            }
+            else {
+                children.SetLocalX(0);
+                children.SetLocalY(0);
+                children.SetLocalWidth(0);
+                children.SetLocalHeight(0);
+                continue;
+            }
+            if (children.IsFixedPosition()) {
+                children.UpdateLayout();
+                continue;
+            }
+            children.UpdateLayout();
+            const input_item = new IBoxLayoutInputItem();
+            input_item.m_right_float = children_styles && children_styles["float"] === "right";
+            input_item.m_inline_block = children.IsInlineDisplay();
+            input_item.m_width = children.GetLocalWidth();
+            input_item.m_height = children.GetLocalHeight();
+            input_item.m_margin_top = children.GetMarginTop();
+            input_item.m_margin_bottom = children.GetMarginBottom();
+            input_item.m_margin_left = children.GetMarginLeft();
+            input_item.m_margin_right = children.GetMarginRight();
+            input_item.m_userdata = children;
+            input_items.push(input_item);
+        }
+
+        const content_local_x = this.GetLeftPaddingBorderSize();
+        const content_local_y = this.GetTopPaddingBorderSize();
+        const output_items = layout.Calculate(input_items);
+        for (let i = 0; i < output_items.length; i++) {
+            const output_item = output_items[i];
+            const children = output_item.m_userdata;
+            children.SetLocalX(content_local_x + output_item.m_x);
+            children.SetLocalY(content_local_y + output_item.m_y);
+        }
+
+        this.SetLocalContentWidth(layout.GetContentWidth());
+        this.SetLocalContentHeight(layout.GetContentHeight());
+
+        if (is_auto_height) {
+            this.SetLocalHeight(this.GetLocalContentHeight() + this.GetPaddingBorderHeight());
+        }
     }
 
     UpdateLayout() {
@@ -453,21 +527,24 @@ class IElement {
             this.SetLocalY(output_item.m_y);
             this.SetLocalWidth(output_item.m_width);
             this.SetLocalHeight(output_item.m_height);
-        } else {
-            if (this.IsVisible()) {
-                this.SetLocalWidth(this.GetLayoutWidth());
-                this.SetLocalHeight(this.GetLayoutHeight());
+        }
+        if (this.IsVisible()) {
+            if (this.IsFlexDisplay()) {
+
             } else {
-                this.SetLocalWidth(0);
-                this.SetLocalHeight(0);
+                this.UpdateBoxLayout();
             }
-            const parent = this.GetParent();
-            if (this.GetLocalX() < 0) {
-                this.SetLocalX(parent.GetPaddingLeft() + parent.GetBorderLeftWidth() + this.GetMarginLeft());
-            }
-            if (this.GetLocalY() < 0) {
-                this.SetLocalY(parent.GetPaddingTop() + parent.GetBorderTopWidth() + this.GetMarginTop());
-            }
+
+        } else {
+            this.SetLocalWidth(0);
+            this.SetLocalHeight(0);
+        }
+        const parent = this.GetParent();
+        if (this.GetLocalX() < 0) {
+            this.SetLocalX(parent.GetPaddingLeft() + parent.GetBorderLeftWidth() + this.GetMarginLeft());
+        }
+        if (this.GetLocalY() < 0) {
+            this.SetLocalY(parent.GetPaddingTop() + parent.GetBorderTopWidth() + this.GetMarginTop());
         }
         this.SetWidth(this.GetLocalWidth());
         this.SetHeight(this.GetLocalHeight());
@@ -533,7 +610,6 @@ class IElement {
 
         // 刷新视口窗口
         this.Refresh(this.GetViewPortX(), this.GetViewPortY(), this.GetViewPortWidth(), this.GetViewPortHeight());
-
 
         // 更新子元素位置
         const childrens = this.GetChildrens();
@@ -722,7 +798,7 @@ class IElement {
         if (margin_left) {
             this.SetMarginLeft(margin_left.GetDimensionValue(parent_local_width, 0));
         }
-        
+
         const top = styles["top"];
         if (top) {
             this.SetTop(top.GetDimensionValue(parent_local_width, 0));

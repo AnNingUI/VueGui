@@ -6,8 +6,8 @@ class IRoot extends IElement {
         this.SetWindow(window);
         this.SetRoot(this);
         this.SetTagName("Root");
-        // this.SetBackgroundColor('white');
-        this.SetBackgroundColor('red');
+        this.SetBackgroundColor('white');
+        // this.SetBackgroundColor('red');
         // this.SetBackgroundColor('green');
     }
 
