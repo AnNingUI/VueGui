@@ -321,11 +321,11 @@ export class IFlexLayout extends ILayout {
             if (input_items_size == 0) continue;
 
             // 更新行内元素布局 行布局 行最大宽使用容器宽 行最大高使用自身最大高 否则相反
-            const axis_max_width = axis.m_max_width;
-            const axis_max_height = axis.m_max_height;
-            const axis_width = axis.m_width;
-            const axis_x = axis.m_x;
-            const axis_y = axis.m_y;
+            let axis_max_width = axis.m_max_width;
+            let axis_max_height = axis.m_max_height;
+            let axis_width = axis.m_width;
+            let axis_x = axis.m_x;
+            let axis_y = axis.m_y;
 
             if (axis_max_width > axis_width) {
                 // 存在剩余空间, 调整扩展
@@ -342,8 +342,8 @@ export class IFlexLayout extends ILayout {
             else if (axis_max_width < axis_width) {
                 // 调整收缩
                 if (axis.m_total_flex_shrink > 0) {
-                    const shrink_space_width = axis_max_width - axis_width;
-                    const axis_shrink_width = 0; // 缩小后总宽度
+                    let shrink_space_width = axis_max_width - axis_width;
+                    let axis_shrink_width = 0; // 缩小后总宽度
                     for (let j = 0; j < input_items_size; j++) {
                         const input_item = input_items[j];
                         const output_item = output_items[j];
@@ -433,12 +433,12 @@ export class IFlexLayout extends ILayout {
             if (input_items_size == 0) continue;
 
             // 更新行内元素布局 行布局 行最大宽使用容器宽 行最大高使用自身最大高 否则相反
-            const axis_max_width = axis.m_max_width;
-            const axis_max_height = axis.m_max_height;
-            const axis_width = axis.m_width;
-            const axis_height = axis.m_height;
-            const axis_x = axis.m_x;
-            const axis_y = axis.m_y;
+            let axis_max_width = axis.m_max_width;
+            let axis_max_height = axis.m_max_height;
+            let axis_width = axis.m_width;
+            let axis_height = axis.m_height;
+            let axis_x = axis.m_x;
+            let axis_y = axis.m_y;
 
             // 列轴
             if (axis_max_height > axis_height) {
@@ -454,8 +454,8 @@ export class IFlexLayout extends ILayout {
             }
             else if (axis_max_height < axis_height) {
                 if (axis.m_total_flex_shrink > 0) {
-                    const shrink_space_height = axis_max_height - axis_height;
-                    const axis_shrink_height = 0;
+                    let shrink_space_height = axis_max_height - axis_height;
+                    let axis_shrink_height = 0;
                     for (let j = 0; j < input_items_size; j++) {
                         const input_item = input_items[j];
                         const output_item = output_items[j];
@@ -662,9 +662,9 @@ export class IFlexLayout extends ILayout {
             const output_item = new ILayoutOutputItem();
 
             // 获取元素宽高
-            const wrap_axis = input_item.m_wrap;
-            const input_item_width = input_item.m_width < 0 ? 0 : input_item.m_width;
-            const input_item_height = input_item.m_height < 0 ? 0 : input_item.m_height;
+            let wrap_axis = input_item.m_wrap;
+            let input_item_width = input_item.m_width < 0 ? 0 : input_item.m_width;
+            let input_item_height = input_item.m_height < 0 ? 0 : input_item.m_height;
             let space_width = input_item_width + input_item.m_margin_left + input_item.m_margin_right;
             let space_height = input_item_height + input_item.m_margin_top + input_item.m_margin_bottom;
 

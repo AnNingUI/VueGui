@@ -1,5 +1,5 @@
 
-import { createRenderer } from "../lib/vue.esm-browser.js"
+import { createRenderer } from "vue"
 import { CanvasWindow } from "./IWindow.js";
 import { IElement } from "./IElement.js";
 

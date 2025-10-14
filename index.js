@@ -1,8 +1,9 @@
 
 // 导入窗口类
 import { VueGuiWindow } from "./src/VueGuiWindow.js";
-// 导入App根组件
-import App from "./app/test/App.js"
+
+import App  from "./app/test/App.vue";
+
 // 获取画布
 const canvas = document.getElementById('window');
 // 创建VueGuiWindow窗口

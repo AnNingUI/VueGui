@@ -551,7 +551,7 @@ class IElement {
                 children.UpdateLayout();
                 continue;
             }
-            children.UpdateLayout();
+            // children.UpdateLayout();
             const input_item = new IFlexLayoutInputItem();
             input_item.m_margin_top = children.GetMarginTop();
             input_item.m_margin_bottom = children.GetMarginBottom();
@@ -746,11 +746,11 @@ class IElement {
         const line_height = styles["line-height"];
         if (line_height) {
             if (line_height.IsPixelValue()) {
-                line_height = line_height.GetPixelValue(this.GetFontSize() * 1.5);
+                this.SetLineHeight(line_height.GetPixelValue(this.GetFontSize() * 1.5));
             } else if (line_height.IsPercentage()) {
-                line_height = line_height.GetPercentageValue(150) / 100 * this.GetFontSize();
+                this.SetLineHeight(line_height.GetPercentageValue(150) / 100 * this.GetFontSize());
             } else if (line_height.IsNumber()) {
-                line_height = line_height.GetNumberValue(1.5) * this.GetFontSize();
+                this.SetLineHeight(line_height.GetNumberValue(1.5) * this.GetFontSize());
             }
         } else {
             this.SetLineHeight((parent && is_support_inherit_style) ? parent.GetLineHeight() : this.GetLineHeight());
