@@ -98,7 +98,7 @@ export class IStyleItem {
     GetPixelValue(default_value) { return this.m_value_type === IStyleTypePixel ? this.m_style_value : default_value; }
     GetColorValue(default_value) { return this.m_value_type === IStyleTypeColor ? this.m_style_value : default_value; }
     GetStringValue(default_value) { return this.m_value_type === IStyleTypeString ? this.m_style_value : default_value; }
-    GetIntegerValue(default_value) { return this.m_value_type === IStyleTypeInteger ? this.m_style_value : default_value; }
+    GetIntegerValue(default_value) { return parseInt((this.m_value_type === IStyleTypeNumber || this.m_value_type === IStyleTypeInteger) ? this.m_style_value : default_value); }
     GetNumberValue(default_value) { return (this.m_value_type === IStyleTypeNumber || this.m_value_type == IStyleTypeInteger) ? this.m_style_value : default_value; }
 
     GetDimensionValue(base_value, default_value) {

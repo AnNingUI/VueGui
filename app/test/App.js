@@ -4,10 +4,13 @@ export default {
     name: 'App',
 
     template: `
-<view style="background-color:green; position: absolute; z-index: 1; width: 200px; height: 300px; left: 50px; top:30px; margin:12px;">
-    <view style="height:100px; background-color:red"></view>
-    <view style="height:100px; background-color:blue"></view>
-    <view style="width:100px; height:100px; background-color:yellow; display:inline-block;"></view>
-    <view style="width:100px; height:100px; background-color:black; display:inline-block;"></view>
-</view>`
+<view style="display: flex; justify-content: center; background-color:green; position: absolute; z-index: 1; width: 300px; height: 300px; left: 50px; top:30px;">
+    <view style="width:100px; height:100px; background-color:red"></view>
+    <view style="width:100px; height:100px; background-color:blue"></view>
+</view>
+<view style="display: flex; flex-direction: column; background-color:green; position: absolute; z-index: 1; width: 300px; height: 300px; left: 50px; top:350px;">
+    <view style="width:100px; height:100px; background-color:red"></view>
+    <view style="width:100px; height:100px; background-color:blue"></view>
+</view>
+`
 }

@@ -1,6 +1,6 @@
 
-import { IInlineSelectorStyle, IStyleItem } from "./IStyle.js";
-import { IFixedLayout, IFixedLayoutInputItem, IBoxLayout, IBoxLayoutInputItem } from "./ILayout.js";
+import { IInlineSelectorStyle } from "./IStyle.js";
+import { IFixedLayout, IFixedLayoutInputItem, IBoxLayout, IBoxLayoutInputItem, IFlexLayout, IFlexLayoutInputItem } from "./ILayout.js";
 
 class IElement {
     constructor() {
@@ -441,7 +441,7 @@ class IElement {
         let local_max_content_height = this.GetLocalMaxContentHeight();
         local_max_content_width = local_max_content_width < 0 ? 0 : local_max_content_width;
         local_max_content_height = local_max_content_height < 0 ? 0 : local_max_content_height;
-        layout.m_width  = local_max_content_width;
+        layout.m_width = local_max_content_width;
         layout.m_height = local_max_content_height;
 
         const input_items = [];
@@ -498,6 +498,109 @@ class IElement {
         }
     }
 
+    UpdateFlexLayout() {
+        const layout_width = this.GetLayoutWidth();
+        const layout_height = this.GetLayoutHeight();
+        const is_auto_height = this.GetLocalHeight() < 0 && this.GetStyleHeight() < 0;
+
+        this.SetLocalWidth(layout_width);
+        this.SetLocalHeight(layout_height);
+
+        const styles = this.GetStyles() || {};
+        const flex_direction = styles["flex-direction"];
+        const flex_wrap = styles["flex-wrap"];
+        const justify_content = styles["justify-content"];
+        const align_items = styles["align-items"];
+        const align_content = styles["align-content"];
+        const layout = new IFlexLayout();
+        let local_max_content_width = this.GetLocalMaxContentWidth();
+        let local_max_content_height = this.GetLocalMaxContentHeight();
+        local_max_content_width = local_max_content_width < 0 ? 0 : local_max_content_width;
+        local_max_content_height = local_max_content_height < 0 ? 0 : local_max_content_height;
+        layout.m_width = local_max_content_width;
+        layout.m_height = local_max_content_height;
+        layout.m_flex_direction = flex_direction ? flex_direction.GetStringValue("row") : "row";
+        layout.m_flex_wrap = flex_wrap ? flex_wrap.GetStringValue("nowrap") : "nowrap";
+        layout.m_justify_content = justify_content ? justify_content.GetStringValue("flex-start") : "flex-start";
+        layout.m_align_items = align_items ? align_items.GetStringValue("flex-start") : "flex-start";
+        layout.m_align_content = align_content ? align_content.GetStringValue("flex-start") : "flex-start";
+
+        const input_items = [];
+        const childrens = this.GetChildrens();
+        for (let i = 0; i < childrens.length; i++) {
+            const children = childrens[i];
+            const children_styles = children.GetStyles() || {};
+            const align_self = children_styles["align-self"];
+            const flex_grow = children_styles["flex-grow"];
+            const flex_shrink = children_styles["flex-shrink"];
+            const order = children_styles["order"];
+            if (children.IsVisible()) {
+                children.SetLocalX(-1);
+                children.SetLocalY(-1);
+                children.SetLocalWidth(-1);
+                children.SetLocalHeight(-1);
+            }
+            else {
+                children.SetLocalX(0);
+                children.SetLocalY(0);
+                children.SetLocalWidth(0);
+                children.SetLocalHeight(0);
+                continue;
+            }
+            if (children.IsFixedPosition()) {
+                children.UpdateLayout();
+                continue;
+            }
+            children.UpdateLayout();
+            const input_item = new IFlexLayoutInputItem();
+            input_item.m_margin_top = children.GetMarginTop();
+            input_item.m_margin_bottom = children.GetMarginBottom();
+            input_item.m_margin_left = children.GetMarginLeft();
+            input_item.m_margin_right = children.GetMarginRight();
+            input_item.m_align_self = align_self ? align_self.GetStringValue("none") : "none";
+            input_item.m_flex_grow = flex_grow ? flex_grow.GetIntegerValue(0) : 0;
+            input_item.m_flex_shrink = flex_shrink ? flex_shrink.GetIntegerValue(0) : 0;
+            input_item.m_order = order ? order.GetIntegerValue(0) : 0;
+            input_item.m_userdata = children;
+            if (input_item.m_flex_grow == 0 && input_item.m_flex_shrink == 0 && input_item.m_align_self != "stretch") {
+                children.UpdateLayout();
+                input_item.m_width = children.GetLocalWidth();
+                input_item.m_height = children.GetLocalHeight();
+            }
+            else {
+                children.ApplyLayoutStyle();
+                input_item.m_width = children.GetStyleWidth();
+                input_item.m_height = children.GetStyleHeight();
+            }
+            input_item.m_width = input_item.m_width < 0 ? 0 : input_item.m_width;
+            input_item.m_height = input_item.m_height < 0 ? 0 : input_item.m_height;
+            input_items.push(input_item);
+        }
+
+        const content_local_x = this.GetLeftPaddingBorderSize();
+        const content_local_y = this.GetTopPaddingBorderSize();
+        const output_items = layout.Calculate(input_items);
+        for (let i = 0; i < output_items.length; i++) {
+            const input_item = input_items[i];
+            const output_item = output_items[i];
+            const children = output_item.m_userdata;
+            children.SetLocalX(content_local_x + output_item.m_x);
+            children.SetLocalY(content_local_y + output_item.m_y);
+            if (children.GetLocalWidth() < 0 || children.GetLocalHeight() < 0) {
+                children.SetLocalWidth(output_item.m_width);
+                children.SetLocalHeight(output_item.m_height);
+                children.UpdateLayout();
+            }
+        }
+
+        this.SetLocalContentWidth(layout.GetContentWidth());
+        this.SetLocalContentHeight(layout.GetContentHeight());
+
+        if (is_auto_height) {
+            this.SetLocalHeight(this.GetLocalContentHeight() + this.GetPaddingBorderHeight());
+        }
+    }
+
     UpdateLayout() {
         this.ApplyLayoutStyle();
         this.SetLayoutChanged(false);
@@ -530,7 +633,7 @@ class IElement {
         }
         if (this.IsVisible()) {
             if (this.IsFlexDisplay()) {
-
+                this.UpdateFlexLayout();
             } else {
                 this.UpdateBoxLayout();
             }

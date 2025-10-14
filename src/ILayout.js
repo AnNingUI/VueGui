@@ -1,3 +1,32 @@
+const ConstantNone = Symbol("ConstantNone");
+const ConstantStart = Symbol("ConstantStart");
+const ConstantCenter = Symbol("ConstantCenter");
+const ConstantEnd = Symbol("ConstantEnd");
+const ConstantSpaceBetween = Symbol("ConstantSpaceBetween");
+const ConstantSpaceAround = Symbol("ConstantSpaceAround");
+const ConstantSpaceEvenly = Symbol("ConstantSpaceEvenly");
+const ConstantStretch = Symbol("ConstantStretch");
+const ConstantRow = Symbol("ConstantRow");
+const ConstantColumn = Symbol("ConstantColumn");
+const ConstantWrap = Symbol("ConstantWrap");
+const ConstantNoWrap = Symbol("ConstantNoWrap");
+
+const ConstantMap = {
+    "none": ConstantNone,
+    "start": ConstantStart,
+    "flex-start": ConstantStart,
+    "center": ConstantCenter,
+    "end": ConstantEnd,
+    "flex-end": ConstantEnd,
+    "space-between": ConstantSpaceBetween,
+    "space-around": ConstantSpaceAround,
+    "space-evenly": ConstantSpaceEvenly,
+    "stretch": ConstantStretch,
+    "row": ConstantRow,
+    "column": ConstantColumn,
+    "wrap": ConstantWrap,
+    "nowrap": ConstantNoWrap,
+}
 
 export class ILayoutInputItem {
     constructor() {
@@ -282,6 +311,8 @@ export class IFlexLayout extends ILayout {
     }
 
     CalculateXMainAsis(axis_list) {
+        const justify_content = ConstantMap[this.m_justify_content] || ConstantStart;
+        const align_items = ConstantMap[this.m_align_items] || ConstantStart;
         for (let i = 0; i < axis_list.length; i++) {
             const axis = axis_list[i];
             const input_items = axis.m_input_items;
@@ -293,7 +324,6 @@ export class IFlexLayout extends ILayout {
             const axis_max_width = axis.m_max_width;
             const axis_max_height = axis.m_max_height;
             const axis_width = axis.m_width;
-            const axis_height = axis.m_height;
             const axis_x = axis.m_x;
             const axis_y = axis.m_y;
 
@@ -335,25 +365,25 @@ export class IFlexLayout extends ILayout {
             // 计算首元素位置和元素间距
             let axis_remain_space_width = 0;
             const first_output_item = output_items[0];
-            if (m_justify_content == "center") {
+            if (justify_content == ConstantCenter) {
                 first_output_item.m_x = axis_x + (axis_max_width - axis_width) / 2;
             }
-            else if (m_justify_content == "space-between") {
+            else if (justify_content == ConstantSpaceBetween) {
                 axis_remain_space_width = input_items_size > 1 ? ((axis_max_width - axis_width) / (input_items_size - 1)) : 0;
                 first_output_item.m_x = axis_x;
             }
-            else if (m_justify_content == "space-around") {
+            else if (justify_content == ConstantSpaceAround) {
                 axis_remain_space_width = (axis_max_width - axis_width) / input_items_size;
                 first_output_item.m_x = axis_x + axis_remain_space_width / 2;
             }
-            else if (m_justify_content == "space-evenly") {
+            else if (justify_content == ConstantSpaceEvenly) {
                 axis_remain_space_width = (axis_max_width - axis_width) / (input_items_size + 1);
                 first_output_item.m_x = axis_x + axis_remain_space_width;
             }
-            else if (m_justify_content == "end") {
+            else if (justify_content == ConstantEnd) {
                 first_output_item.m_x = axis_x + axis_max_width - axis_width;
             }
-            else // m_justify_content == Constant::Start
+            else // m_justify_content == ConstantStart
             {
                 first_output_item.m_x = axis_x;
             }
@@ -364,20 +394,21 @@ export class IFlexLayout extends ILayout {
                 const output_item = output_items[j];
 
                 output_item.m_x = next_output_item_x;
-                next_output_item_x = output_item.m_x + output_item.m_width + axis_remain_space_width + m_column_gap;
+                next_output_item_x = output_item.m_x + output_item.m_width + axis_remain_space_width + this.m_column_gap;
 
-                const align_self = input_item.m_align_self == "none" ? m_align_items : input_item.m_align_self;
-                if (align_self == "center") {
+                let align_self = ConstantMap[input_item.m_align_self] || ConstantNone;
+                align_self = align_self == ConstantNone ? align_items : align_self;
+                if (align_self == ConstantCenter) {
                     output_item.m_y = axis_y + (axis_max_height - output_item.m_height) / 2;
                 }
-                else if (align_self == "stretch") {
+                else if (align_self == ConstantStretch) {
                     output_item.m_y = axis_y;
                     output_item.m_height = axis_max_height;
                 }
-                else if (align_self == "end") {
+                else if (align_self == ConstantEnd) {
                     output_item.m_y = axis_y + axis_max_height - output_item.m_height;
                 }
-                else // align_self == Constant::Start
+                else // align_self == ConstantStart
                 {
                     output_item.m_y = axis_y;
                 }
@@ -391,6 +422,9 @@ export class IFlexLayout extends ILayout {
     }
 
     CalculateYMainAsis(axis_list) {
+        const justify_content = ConstantMap[this.m_justify_content] || ConstantStart;
+        const align_items = ConstantMap[this.m_align_items] || ConstantStart;
+
         for (let i = 0; i < axis_list.length; i++) {
             const axis = axis_list[i];
             const input_items = axis.m_input_items;
@@ -443,25 +477,25 @@ export class IFlexLayout extends ILayout {
             // 调整位置
             let axis_remain_space_height = 0;
             const first_output_item = output_items[0];
-            if (m_justify_content == "center") {
+            if (justify_content == ConstantCenter) {
                 first_output_item.m_y = axis_y + (axis_max_height - axis_height) / 2;
             }
-            else if (m_justify_content == "space-between") {
+            else if (justify_content == ConstantSpaceBetween) {
                 axis_remain_space_height = input_items_size > 1 ? ((axis_max_height - axis_height) / (input_items_size - 1)) : 0;
                 first_output_item.m_y = axis_y;
             }
-            else if (m_justify_content == "space-around") {
+            else if (justify_content == ConstantSpaceAround) {
                 axis_remain_space_height = (axis_max_height - axis_height) / input_items_size;
                 first_output_item.m_y = axis_y + axis_remain_space_height / 2;
             }
-            else if (m_justify_content == "space-evenly") {
+            else if (justify_content == ConstantSpaceEvenly) {
                 axis_remain_space_height = (axis_max_height - axis_height) / (input_items_size + 1);
                 first_output_item.m_y = axis_y + axis_remain_space_height;
             }
-            else if (m_justify_content == "end") {
+            else if (justify_content == ConstantEnd) {
                 first_output_item.m_y = axis_y + axis_max_height - axis_height;
             }
-            else // m_justify_content == Constant::Start
+            else // m_justify_content == ConstantStart
             {
                 first_output_item.m_y = axis_y;
             }
@@ -472,20 +506,21 @@ export class IFlexLayout extends ILayout {
                 const output_item = output_items[j];
 
                 output_item.m_y = next_outout_item_y;
-                next_outout_item_y = output_item.m_y + output_item.m_height + axis_remain_space_height + m_row_gap;
+                next_outout_item_y = output_item.m_y + output_item.m_height + axis_remain_space_height + this.m_row_gap;
 
-                const align_self = input_item.m_align_self == "none" ? m_align_items : input_item.m_align_self;
-                if (align_self == "center") {
+                let align_self = ConstantMap[input_item.m_align_self] || ConstantNone;
+                align_self = align_self == ConstantNone ? align_items : align_self;
+                if (align_self == ConstantCenter) {
                     output_item.m_x = axis_x + (axis_max_width - output_item.m_width) / 2;
                 }
-                else if (align_self == "stretch") {
+                else if (align_self == ConstantStretch) {
                     output_item.m_x = axis_x;
                     output_item.m_width = axis_max_width;
                 }
-                else if (align_self == "end") {
+                else if (align_self == ConstantEnd) {
                     output_item.m_x = axis_x + axis_max_width - output_item.m_width;
                 }
-                else // align_self == Constant::Start
+                else // align_self == ConstantStart
                 {
                     output_item.m_x = axis_x;
                 }
@@ -502,9 +537,10 @@ export class IFlexLayout extends ILayout {
     CalculateMultiAxis(axis_list) {
         // 获取轴数量 若为空则直接返回
         const axis_list_size = axis_list.length;
-        const is_row_layout = IsRowLayout();
-        let flex_layout_width = GetLayoutWidth();
-        let flex_layout_height = GetLayoutHeight();
+        const align_content = ConstantMap[this.m_align_content] || ConstantStart;
+        const is_row_layout = this.IsRowLayout();
+        let flex_layout_width = this.GetLayoutWidth();
+        let flex_layout_height = this.GetLayoutHeight();
 
         // 轴信息计算完毕, 计算容器相关信息
         let total_axis_width = 0; // 所有轴的宽度
@@ -518,29 +554,29 @@ export class IFlexLayout extends ILayout {
                 axis.m_max_height = axis.m_height;
                 total_axis_width = flex_layout_width;
                 total_axis_height += axis.m_max_height;
-                m_content_width = m_content_width < axis.m_width ? axis.m_width : m_content_width;
-                m_content_height += axis.m_height;
-                m_content_height += i == 0 ? 0 : m_row_gap;
+                this.m_content_width = this.m_content_width < axis.m_width ? axis.m_width : this.m_content_width;
+                this.m_content_height += axis.m_height;
+                this.m_content_height += i == 0 ? 0 : this.m_row_gap;
             }
             else {
                 axis.m_max_width = axis.m_width;
                 axis.m_max_height = flex_layout_height;
                 total_axis_width += axis.m_max_width;
                 total_axis_height = flex_layout_height;
-                m_content_width += axis.m_width;
-                m_content_height = m_content_height < axis.m_height ? axis.m_height : m_content_height;
-                m_content_width += i == 0 ? 0 : m_column_gap;
+                this.m_content_width += axis.m_width;
+                this.m_content_height = this.m_content_height < axis.m_height ? axis.m_height : this.m_content_height;
+                this.m_content_width += i == 0 ? 0 : this.m_column_gap;
             }
         }
 
         // 更新最大轴宽高, 避免后需坐标出现负值
-        flex_layout_width = flex_layout_width < m_content_width ? m_content_width : flex_layout_width;
-        flex_layout_height = flex_layout_height < m_content_height ? m_content_height : flex_layout_height;
+        flex_layout_width = flex_layout_width < this.m_content_width ? this.m_content_width : flex_layout_width;
+        flex_layout_height = flex_layout_height < this.m_content_height ? this.m_content_height : flex_layout_height;
 
         // 更新多轴布局
         let multi_axis_remain_space_width = 0; // 多轴扩展宽
         let multi_axis_remain_space_height = 0; // 多轴扩展高
-        if (m_align_content == "stretch" || axis_list_size == 1) {
+        if (align_content == ConstantStretch || axis_list_size == 1) {
             // 多轴均分扩展空间 注意类型是否为 Int
             let local_remain_space_width = (flex_layout_width - total_axis_width) / axis_list_size;
             let local_remain_space_height = (flex_layout_height - total_axis_height) / axis_list_size;
@@ -553,29 +589,29 @@ export class IFlexLayout extends ILayout {
                 axis.m_max_height += local_remain_space_height;
             }
         }
-        else if (m_align_content == "center") {
+        else if (align_content == ConstantCenter) {
             // 居中对齐
             axis_list[0].m_x = (flex_layout_width - total_axis_width) / 2;
             axis_list[0].m_y = (flex_layout_height - total_axis_height) / 2;
         }
-        else if (m_align_content == "space-between") {
+        else if (align_content == ConstantSpaceBetween) {
             // 两端等间隔对齐
             multi_axis_remain_space_width = (flex_layout_width - total_axis_width) / (axis_list_size - 1);
             multi_axis_remain_space_height = (flex_layout_height - total_axis_height) / (axis_list_size - 1);
         }
-        else if (m_align_content == "space-around") {
+        else if (align_content == ConstantSpaceAround) {
             // 居中等间隔对齐
             multi_axis_remain_space_width = (flex_layout_width - total_axis_width) / axis_list_size;
             multi_axis_remain_space_height = (flex_layout_height - total_axis_height) / axis_list_size;
             axis_list[0].m_x = multi_axis_remain_space_width / 2;
             axis_list[0].m_y = multi_axis_remain_space_height / 2;
         }
-        else if (m_align_content == "end") {
+        else if (align_content == ConstantEnd) {
             // 尾端对齐
             axis_list[0].m_x = flex_layout_width - total_axis_width;
             axis_list[0].m_y = flex_layout_height - total_axis_height;
         }
-        else // m_align_content == Constant::Start
+        else // m_align_content == ConstantStart
         {
             // 首端对齐
         }
@@ -623,14 +659,14 @@ export class IFlexLayout extends ILayout {
 
         for (let i = 0; i < input_items.length; ++i) {
             const input_item = input_items[i];
-            const output_item = new IFlexLayoutOutputItem();
+            const output_item = new ILayoutOutputItem();
 
             // 获取元素宽高
+            const wrap_axis = input_item.m_wrap;
             const input_item_width = input_item.m_width < 0 ? 0 : input_item.m_width;
             const input_item_height = input_item.m_height < 0 ? 0 : input_item.m_height;
-            const space_width = input_item_width + input_item.m_margin_left + input_item.m_margin_right;
-            const space_height = input_item_height + input_item.m_margin_top + input_item.m_margin_bottom;
-            const wrap_axis = input_item.m_wrap;
+            let space_width = input_item_width + input_item.m_margin_left + input_item.m_margin_right;
+            let space_height = input_item_height + input_item.m_margin_top + input_item.m_margin_bottom;
 
             // 初始化输出项
             output_item.m_x = 0;
@@ -641,10 +677,10 @@ export class IFlexLayout extends ILayout {
             output_items.push(output_item);
 
             if (is_row_layout) {
-                space_width += axis.m_input_items.length === 0 ? 0 : m_column_gap;
+                space_width += axis.m_input_items.length === 0 ? 0 : this.m_column_gap;
             }
             else {
-                space_height += axis.m_input_items.length === 0 ? 0 : m_row_gap;
+                space_height += axis.m_input_items.length === 0 ? 0 : this.m_row_gap;
             }
 
             // 计算是否换轴
@@ -661,7 +697,7 @@ export class IFlexLayout extends ILayout {
                 }
                 // if (IsWrapAxis(axis, space_width, space_height))
                 if (wrap_axis) {
-                    axis_list.push_back(axis);
+                    axis_list.push_(axis);
                     axis = this.NewAxis();
                     // 坐标轴首个项没有间距
                     space_width = output_item.m_width;
@@ -681,12 +717,12 @@ export class IFlexLayout extends ILayout {
 
             axis.m_total_flex_grow += input_item.m_flex_grow;
             axis.m_total_flex_shrink += input_item.m_flex_shrink;
-            axis.m_input_items.push_back(input_item);
-            axis.m_output_items.push_back(output_item);
+            axis.m_input_items.push(input_item);
+            axis.m_output_items.push(output_item);
         }
 
         // 添加最后一行
-        if (axis.m_input_items.length > 0) axis_list.push_back(axis);
+        if (axis.m_input_items.length > 0) axis_list.push(axis);
 
         return axis_list;
     }
