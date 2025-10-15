@@ -1,7 +1,6 @@
 
 // 导入窗口类
 import { VueGuiWindow } from "./src/VueGuiWindow.js";
-
 import App  from "./app/test/App.vue";
 
 // 获取画布

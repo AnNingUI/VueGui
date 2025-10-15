@@ -122,6 +122,26 @@ class IWindow {
     OnKeyUp(key) {
         // key: e.g., 'a', 'Enter', 'ArrowUp', etc.
     }
+
+    // 加载字体
+    async LoadFont(font_name, font_url) {
+       try {
+            // 创建 FontFace 对象
+            const font = new FontFace(font_name, `url(${font_url})`);
+            
+            // 将字体添加到文档字体集合中
+            document.fonts.add(font);
+            
+            // 等待字体加载完成
+            await font.load();
+            
+            console.log(`Font ${font_name} loaded successfully.`);
+            return font; // 返回字体对象，便于后续使用
+        } catch (error) {
+            console.error(`Failed to load font ${font_name}:`, error);
+            throw error; // 重新抛出错误，让调用者可以处理
+        }
+    }
 }
 
 class CanvasWindow extends IWindow {

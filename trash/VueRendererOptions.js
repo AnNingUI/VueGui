@@ -1,4 +1,4 @@
-import { IElement } from "./IElement.js";
+import { IElement } from "../src/IElement.js";
 
 class TextNode {
     constructor(text) {

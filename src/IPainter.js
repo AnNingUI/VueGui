@@ -198,8 +198,9 @@ class IPainter {
     FillText(text, x, y, font, color) {
         const ctx = this.GetRenderingContext2D();
         ctx.font = font;
+        const measure = ctx.measureText(text);
         ctx.fillStyle = color;
-        ctx.fillText(text, x, y);
+        ctx.fillText(text, x, y + measure.fontBoundingBoxAscent);
     }
 
     // 测量文本宽度

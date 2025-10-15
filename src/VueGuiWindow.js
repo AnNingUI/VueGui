@@ -2,6 +2,10 @@
 import { createRenderer } from "vue"
 import { CanvasWindow } from "./IWindow.js";
 import { IElement } from "./IElement.js";
+import { CreateCustomElement } from "./CustomElement.js";
+
+import IconFontTTF from "./font/iconfont.ttf";
+// console.log('Font URL:', IconFontTTF);
 
 class TextNode {
     constructor(text) {
@@ -21,10 +25,13 @@ class VueGuiWindow extends CanvasWindow {
     constructor(canvas, vue_app_creator) {
         super(canvas);
 
-        const { createApp } = createRenderer(this.GetVueRendererOptions()); // 创建自定义App
-        this.m_vue_app = vue_app_creator(createApp);
-        this.m_vue_app.config.compilerOptions.isCustomElement = (tag) => true; // 所有元素均为定制元素
-        this.m_vue_app.mount(this.GetRoot());
+        this.LoadFont("iconfont", IconFontTTF).then(() => {
+            const { createApp } = createRenderer(this.GetVueRendererOptions()); // 创建自定义App
+            this.m_vue_app = vue_app_creator(createApp);
+            this.m_vue_app.config.compilerOptions.isCustomElement = (tag) => true; // 所有元素均为定制元素
+            this.m_vue_app.mount(this.GetRoot());
+        });
+
     }
 
     GetVueRendererOptions() {
@@ -50,10 +57,10 @@ class VueGuiWindow extends CanvasWindow {
             },
 
             createElement: (tag, namespace, is, props) => {
-                let el = undefined;
-                if (tag == "JsButton") {
+                tag = tag.toLowerCase()
 
-                } else {
+                let el = CreateCustomElement(tag);
+                if (!el) {
                     el = new IElement();
                 }
                 el.SetTagName(tag);
