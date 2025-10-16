@@ -1,5 +1,5 @@
 
-import { IInlineSelectorStyle } from "./IStyle.js";
+import { IInlineSelectorStyle, ISelectorStyle, normalizeStyle } from "./IStyle.js";
 import { IFixedLayout, IFixedLayoutInputItem, IBoxLayout, IBoxLayoutInputItem, IFlexLayout, IFlexLayoutInputItem } from "./ILayout.js";
 
 class IElement {
@@ -76,7 +76,7 @@ class IElement {
 
         this.SetAttributeSetterGetter("style", (style_value) => {
             this.m_inline_style_changed = true;
-            this.m_attribute_style = style_value;
+            this.m_attribute_style = style_value; // 支持字符串、对象、数组
             this.SetStyleChanged(true);
         });
 
@@ -239,15 +239,57 @@ class IElement {
     GetLeft() { return this.m_left; }
 
     // 背景 字体
-    SetBackgroundColor(color) { this.m_background_color = color; }
+    SetBackgroundColor(color) { 
+        if (this.m_background_color !== color) {
+            this.m_background_color = color; 
+            this.Refresh();
+        }
+    }
     GetBackgroundColor() { return this.m_background_color; }
-    SetFontColor(color) { this.m_font_color = color; }
+    SetFontColor(color) { 
+        if (this.m_font_color !== color) {
+            this.m_font_color = color; 
+            this.Refresh();
+        }
+    }
     GetFontColor() { return this.m_font_color; }
-    SetFontSize(size) { this.m_font_size = size; }
+    SetFontSize(size) { 
+        if (this.m_font_size !== size) {
+            this.m_font_size = size; 
+            this.SetLayoutChanged(true);
+            
+            // 通知父元素需要重新布局（子元素大小变化）
+            const parent = this.GetParent();
+            if (parent) {
+                parent.SetLayoutChanged(true);
+            }
+            
+            this.Refresh();
+        }
+    }
     GetFontSize() { return this.m_font_size; }
-    SetFontFamily(family) { this.m_font_family = family; }
+    SetFontFamily(family) { 
+        if (this.m_font_family !== family) {
+            this.m_font_family = family; 
+            this.SetLayoutChanged(true);
+            this.Refresh();
+        }
+    }
     GetFontFamily() { return this.m_font_family; }
-    SetLineHeight(height) { this.m_line_height = height; }
+    SetLineHeight(height) { 
+        if (this.m_line_height !== height) {
+            this.m_line_height = height; 
+            this.SetLayoutChanged(true);
+            
+            // 通知父元素需要重新布局（子元素大小变化）
+            const parent = this.GetParent();
+            if (parent) {
+                parent.SetLayoutChanged(true);
+            }
+            
+            this.Refresh();
+        }
+    }
     GetLineHeight() { return this.m_line_height; }
 
     // 文本
@@ -294,6 +336,14 @@ class IElement {
         }
         this.m_attribute_changed = true;
         this.m_attributes[key] = value;
+        
+        // 如果设置的是样式属性，需要更新样式（支持字符串、对象、数组）
+        if (key === 'style') {
+            this.m_attribute_style = value;
+            this.m_inline_style_changed = true;
+            this.SetStyleChanged(true);
+        }
+        
         this.Refresh();
         return true;
     }
@@ -318,7 +368,10 @@ class IElement {
     }
 
     Refresh() {
-        this.GetWindow().Refresh(this.m_viewport_x, this.m_viewport_y, this.m_viewport_width, this.m_viewport_height);
+        const window = this.GetWindow();
+        if (window) {
+            window.Refresh(this.m_viewport_x, this.m_viewport_y, this.m_viewport_width, this.m_viewport_height);
+        }
     }
 
     Render(painter) {
@@ -385,19 +438,30 @@ class IElement {
         this.m_style_changed = false;
 
         if (this.m_selector_style_changed) {
-            // 更新选择器样式
+            // 更新选择器样式（如果有样式管理器）
+            this.m_selector_style_changed = false;
         }
 
         if (this.m_inline_style_changed) {
-            // 更新内联样式
+            // 更新内联样式 - 支持Vue风格的camelCase对象
             this.m_inline_selector_style = new IInlineSelectorStyle(this.m_attribute_style);
             this.m_inline_style_changed = false;
         }
 
         // 合并样式
-        if (this.m_inline_selector_style) {
-            this.m_styles = this.m_inline_selector_style.GetStyle();
+        const finalStyle = new ISelectorStyle();
+        
+        // 应用选择器样式（如果有）
+        if (this.m_selector_selector_style) {
+            finalStyle.MergeStyles(this.m_selector_selector_style);
         }
+        
+        // 应用内联样式（优先级最高）
+        if (this.m_inline_selector_style) {
+            finalStyle.MergeStyles(this.m_inline_selector_style);
+        }
+        
+        this.m_styles = finalStyle.GetStyle();
 
         // 生效元素样式
         this.ApplyElementStyle();
@@ -729,12 +793,17 @@ class IElement {
         const parent = this.GetParent();
         const is_support_inherit_style = false;
 
+        // 保存旧的 fontSize 以检测变化
+        const oldFontSize = this.GetFontSize();
+        
         const font_size = styles["font-size"];
         if (font_size && font_size.IsPixelValue()) {
             this.SetFontSize(font_size.GetPixelValue(0));
         } else {
             this.SetFontSize((parent && is_support_inherit_style) ? parent.GetFontSize() : this.GetFontSize());
         }
+        
+        const fontSize_changed = this.GetFontSize() !== oldFontSize;
 
         const font_color = styles["color"];
         if (font_color && font_color.IsColorValue()) {
@@ -747,11 +816,14 @@ class IElement {
         if (line_height) {
             if (line_height.IsPixelValue()) {
                 this.SetLineHeight(line_height.GetPixelValue(this.GetFontSize() * 1.5));
-            } else if (line_height.IsPercentage()) {
+            } else if (line_height.IsPercentageValue()) {
                 this.SetLineHeight(line_height.GetPercentageValue(150) / 100 * this.GetFontSize());
-            } else if (line_height.IsNumber()) {
+            } else if (line_height.IsNumberValue()) {
                 this.SetLineHeight(line_height.GetNumberValue(1.5) * this.GetFontSize());
             }
+        } else if (fontSize_changed) {
+            // 🔥 关键修复：如果 fontSize 变了但没有明确设置 lineHeight，自动按比例更新
+            this.SetLineHeight(this.GetFontSize() * 1.5);
         } else {
             this.SetLineHeight((parent && is_support_inherit_style) ? parent.GetLineHeight() : this.GetLineHeight());
         }

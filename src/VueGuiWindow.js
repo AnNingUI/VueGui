@@ -1,8 +1,8 @@
 
-import { createRenderer } from "vue"
-import { CanvasWindow } from "./IWindow.js";
-import { IElement } from "./IElement.js";
+import { createRenderer } from "vue";
 import { CreateCustomElement } from "./CustomElement.js";
+import { IElement } from "./IElement.js";
+import { CanvasWindow } from "./IWindow.js";
 
 import IconFontTTF from "./font/iconfont.ttf";
 // console.log('Font URL:', IconFontTTF);
@@ -34,10 +34,25 @@ class VueGuiWindow extends CanvasWindow {
 
     }
 
+    // W
+    get innerWidth() {
+        return this.GetWindowWidth();
+    }
+
+    // H
+    get innerHeight() {
+        return this.GetWindowHeight();
+    }
+
     GetVueRendererOptions() {
         const root = this.GetRoot();
         return {
             patchProp: (el, key, prevValue, nextValue, namespace, parentComponent) => {
+                // 支持Vue风格的style对象（camelCase属性名）
+                // nextValue可以是：
+                // - 字符串: "color: red; font-size: 14px"
+                // - 对象: { backgroundColor: 'red', fontSize: 14 }
+                // - 数组: [{ color: 'red' }, 'font-size: 14px']
                 el.InsertAttribute(key, nextValue);
             },
 
@@ -101,4 +116,5 @@ class VueGuiWindow extends CanvasWindow {
     }
 }
 
-export { VueGuiWindow }
+export { VueGuiWindow };
+// window.innerWidth

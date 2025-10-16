@@ -35,6 +35,7 @@ class ICharacter extends IElement {
         }
         this.m_character = character;
         this.SetLayoutChanged(true);
+        this.Refresh();
     }
 
     // https://developer.mozilla.org/zh-CN/docs/Web/CSS/font
