@@ -1,14 +1,13 @@
 <template>
-    <icon ref="icon" value="icon-keyboard" :style="{
+    <icon class="icon" ref="icon" value="icon-keyboard" :style="{
         fontSize: `${size}px`,
-        color: 'blue',
-        backgroundColor: 'red'
-    }"></icon>
+    }" @click="console.log('123')"></icon>
 </template>
 
 <script setup>
 import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
-const icon = useTemplateRef('icon');
+import { Icon } from '../../src/ICharacter';
+const icon = useTemplateRef < Icon > ('icon');
 const size = ref(30);
 let intervalId;
 onMounted(() => {
@@ -27,3 +26,10 @@ onUnmounted(() => {
     }
 });
 </script>
+
+<style>
+.icon {
+    color: red;
+    background-color: blue;
+}
+</style>

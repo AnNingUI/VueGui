@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "preserve",
+
+    /* 类型检查 - 严格模式(渐进式) */
+    "strict": true,
+    "noImplicitAny": false,  // 暂时允许隐式 any,逐步添加类型
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": false,  // 类属性可以不初始化
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": false,  // 暂时不检查未使用的局部变量
+    "noUnusedParameters": false,  // 暂时不检查未使用的参数
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": false,  // 暂时不要求索引访问检查
+    "allowJs": false,
+    "checkJs": false
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.d.ts", "app/**/*.ts", "app/**/*.tsx", "app/**/*.vue", "index.ts"],
+  "exclude": ["node_modules"]
+}

@@ -1,20 +1,22 @@
-import { IElement } from "./IElement.js";
+import { IElement } from "./IElement.ts";
+import type { IWindow } from "./IWindow.ts";
 
 class IText extends IElement {
-    constructor(window) {
-        super(window);
+    constructor(window: IWindow) {
+        super();
+        this.SetWindow(window);
         this.SetTagName("Text");
         this.SetFontSize(16);
         this.SetFontFamily("Arial");
         this.SetLineHeight(20);
     }
 
-    SetText(text) {
+    SetText(text: string): void {
         this.m_text = text;
         this.SetLayoutChanged(true);
     }
 
-    UpdateLayout() {
+    UpdateLayout(): void {
         this.ApplyLayoutStyle();
         this.SetLayoutChanged(false);
         this.SetPositionChanged(true);

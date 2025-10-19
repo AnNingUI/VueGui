@@ -1,7 +1,11 @@
-import { IElement } from "./IElement.js";
+import { IElement } from "./IElement.ts";
+import type { IWindow } from "./IWindow.ts";
+import type { IEvent } from "./IEvent.ts";
 
 class IRoot extends IElement {
-    constructor(window) {
+    private m_focused_element: IElement | null = null;
+
+    constructor(window: IWindow) {
         super();
         this.SetWindow(window);
         this.SetRoot(this);
@@ -11,7 +15,45 @@ class IRoot extends IElement {
         // this.SetBackgroundColor('green');
     }
 
-    UpdateLayout() {
+    /**
+     * 设置焦点元素
+     */
+    SetFocusedElement(element: IElement | null): void {
+        if (this.m_focused_element === element) return;
+
+        // 让旧元素失去焦点
+        if (this.m_focused_element && typeof (this.m_focused_element as any).Blur === 'function') {
+            (this.m_focused_element as any).Blur();
+        }
+
+        this.m_focused_element = element;
+    }
+
+    /**
+     * 获取焦点元素
+     */
+    GetFocusedElement(): IElement | null {
+        return this.m_focused_element;
+    }
+
+    /**
+     * 重写 DispatchEvent 以支持键盘事件派发到焦点元素
+     */
+    DispatchEvent(event: IEvent): boolean {
+        const type = event.GetType();
+
+        // 键盘事件派发到焦点元素
+        if (type === 'keydown' || type === 'keyup' || type === 'keypress') {
+            if (this.m_focused_element) {
+                return this.m_focused_element.DispatchEvent(event);
+            }
+        }
+
+        // 其他事件使用父类的派发逻辑
+        return super.DispatchEvent(event);
+    }
+
+    UpdateLayout(): void {
         const window_width = this.GetWindowWidth();
         const window_height = this.GetWindowHeight();
 
@@ -24,7 +66,7 @@ class IRoot extends IElement {
         const childrens = this.GetChildrens();
         for (let i = 0; i < childrens.length; i++) {
             const children = childrens[i];
-            if (children.IsVisible()) {
+            if (children && children.IsVisible()) {
                 children.SetLocalX(-1);
                 children.SetLocalY(-1);
                 children.SetLocalWidth(-1);
@@ -34,7 +76,7 @@ class IRoot extends IElement {
         }
     }
 
-    UpdatePosition() {
+    UpdatePosition(): void {
         const window_width = this.GetWindowWidth();
         const window_height = this.GetWindowHeight();
 
@@ -62,7 +104,7 @@ class IRoot extends IElement {
             const childrens_size = childrens.length;
             for (let i = 0; i < childrens_size; i++) {
                 const children = childrens[i];
-                if (children.IsVisible()) {
+                if (children && children.IsVisible()) {
                     children.UpdatePosition();
                 }
             }

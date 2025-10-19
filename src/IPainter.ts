@@ -1,32 +1,20 @@
-
-// IPainter.js 
-// canvas 是与窗口非常类似的一个元素
-// 因为其具备交互与绘制能力， 交互主要是指鼠标与键盘事件
-// 要实现GUI框架， 绘制类是不可或缺的
-// 当前文件定义绘制类，实现常用的绘制接口，主要有：
-// 绘制线条、三角形、矩形、圆角矩形、圆弧、扇形、多边形和文本等
-// 填充三角形、矩形、圆角矩形、圆弧、扇形、多边形和文本等
-// 裁剪，保存和恢复绘制状态
-// 平移、旋转和缩放等变换操作
-// 测量文本宽度
-
-// 该类依赖于HTML5的CanvasRenderingContext2D对象
-// 该对象提供了丰富的2D绘制功能
-// 通过封装这些功能， 提供一个统一的绘制接口
-// 方便在不同的窗口中使用
+import type { IElement } from "./IElement.ts";
+import type { Point } from "./types.ts";
 
 class IPainter {
-    constructor(rendering_context_2d) {
-        this.m_rendering_context_2d = rendering_context_2d; // CanvasRenderingContext2D 具体绘制上下文
+    private m_rendering_context_2d: CanvasRenderingContext2D;
+
+    constructor(rendering_context_2d: CanvasRenderingContext2D) {
+        this.m_rendering_context_2d = rendering_context_2d;
     }
 
     // 获取2D绘制上下文
-    GetRenderingContext2D() {
+    GetRenderingContext2D(): CanvasRenderingContext2D {
         return this.m_rendering_context_2d;
     }
 
     // 绘制线条
-    StrokeLine(x1, y1, x2, y2, color, line_width) {
+    StrokeLine(x1: number, y1: number, x2: number, y2: number, color: string, line_width: number): void {
         const ctx = this.GetRenderingContext2D();
         ctx.strokeStyle = color;
         ctx.lineWidth = line_width;
@@ -37,7 +25,7 @@ class IPainter {
     }
 
     // 绘制三角形
-    StrokeTriangle(x1, y1, x2, y2, x3, y3, color, line_width) {
+    StrokeTriangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, color: string, line_width: number): void {
         const ctx = this.GetRenderingContext2D();
         ctx.strokeStyle = color;
         ctx.lineWidth = line_width;
@@ -50,7 +38,7 @@ class IPainter {
     }
 
     // 绘制矩形
-    StrokeRectangle(x, y, width, height, color, line_width) {
+    StrokeRectangle(x: number, y: number, width: number, height: number, color: string, line_width: number): void {
         const ctx = this.GetRenderingContext2D();
         ctx.strokeStyle = color;
         ctx.lineWidth = line_width;
@@ -58,7 +46,7 @@ class IPainter {
     }
 
     // 绘制圆角矩形
-    StrokeRoundRectangle(x, y, width, height, radius, color, line_width) {
+    StrokeRoundRectangle(x: number, y: number, width: number, height: number, radius: number, color: string, line_width: number): void {
         const ctx = this.GetRenderingContext2D();
         ctx.strokeStyle = color;
         ctx.lineWidth = line_width;
@@ -77,7 +65,7 @@ class IPainter {
     }
 
     // 绘制圆弧
-    StrokeArc(x, y, radius, start_angle, end_angle, color, line_width) {
+    StrokeArc(x: number, y: number, radius: number, start_angle: number, end_angle: number, color: string, line_width: number): void {
         const ctx = this.GetRenderingContext2D();
         ctx.strokeStyle = color;
         ctx.lineWidth = line_width;
@@ -87,7 +75,7 @@ class IPainter {
     }
 
     // 绘制扇形
-    StrokeSector(x, y, radius, start_angle, end_angle, color, line_width) {
+    StrokeSector(x: number, y: number, radius: number, start_angle: number, end_angle: number, color: string, line_width: number): void {
         const ctx = this.GetRenderingContext2D();
         ctx.strokeStyle = color;
         ctx.lineWidth = line_width;
@@ -99,22 +87,28 @@ class IPainter {
     }
 
     // 绘制多边形
-    StrokePolygon(points, color, line_width) {
+    StrokePolygon(points: Point[], color: string, line_width: number): void {
         if (points.length < 2) return;
         const ctx = this.GetRenderingContext2D();
         ctx.strokeStyle = color;
         ctx.lineWidth = line_width;
         ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
+        const firstPoint = points[0];
+        if (firstPoint) {
+            ctx.moveTo(firstPoint.x, firstPoint.y);
+            for (let i = 1; i < points.length; i++) {
+                const point = points[i];
+                if (point) {
+                    ctx.lineTo(point.x, point.y);
+                }
+            }
         }
         ctx.closePath();
         ctx.stroke();
     }
 
     // 绘制文本
-    StrokeText(text, x, y, font, color) {
+    StrokeText(text: string, x: number, y: number, font: string, color: string): void {
         const ctx = this.GetRenderingContext2D();
         ctx.font = font;
         ctx.fillStyle = color;
@@ -122,7 +116,7 @@ class IPainter {
     }
 
     // 填充三角形
-    FillTriangle(x1, y1, x2, y2, x3, y3, color) {
+    FillTriangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, color: string): void {
         const ctx = this.GetRenderingContext2D();
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -134,14 +128,14 @@ class IPainter {
     }
 
     // 填充矩形
-    FillRectangle(x, y, width, height, color) {
+    FillRectangle(x: number, y: number, width: number, height: number, color: string): void {
         const ctx = this.GetRenderingContext2D();
         ctx.fillStyle = color;
         ctx.fillRect(x, y, width, height);
     }
 
     // 填充圆角矩形
-    FillRoundRectangle(x, y, width, height, radius, color) {
+    FillRoundRectangle(x: number, y: number, width: number, height: number, radius: number, color: string): void {
         const ctx = this.GetRenderingContext2D();
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -159,7 +153,7 @@ class IPainter {
     }
 
     // 填充圆弧
-    FillArc(x, y, radius, start_angle, end_angle, color) {
+    FillArc(x: number, y: number, radius: number, start_angle: number, end_angle: number, color: string): void {
         const ctx = this.GetRenderingContext2D();
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -170,7 +164,7 @@ class IPainter {
     }
 
     // 填充扇形
-    FillSector(x, y, radius, start_angle, end_angle, color) {
+    FillSector(x: number, y: number, radius: number, start_angle: number, end_angle: number, color: string): void {
         const ctx = this.GetRenderingContext2D();
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -181,21 +175,27 @@ class IPainter {
     }
 
     // 填充多边形
-    FillPolygon(points, color) {
+    FillPolygon(points: Point[], color: string): void {
         if (points.length < 2) return;
         const ctx = this.GetRenderingContext2D();
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
+        const firstPoint = points[0];
+        if (firstPoint) {
+            ctx.moveTo(firstPoint.x, firstPoint.y);
+            for (let i = 1; i < points.length; i++) {
+                const point = points[i];
+                if (point) {
+                    ctx.lineTo(point.x, point.y);
+                }
+            }
         }
         ctx.closePath();
         ctx.fill();
     }
 
     // 填充文本
-    FillText(text, x, y, font, color) {
+    FillText(text: string, x: number, y: number, font: string, color: string): void {
         const ctx = this.GetRenderingContext2D();
         ctx.font = font;
         const measure = ctx.measureText(text);
@@ -204,20 +204,20 @@ class IPainter {
     }
 
     // 测量文本宽度
-    MeasureText(text, font) {
+    MeasureText(text: string, font: string): TextMetrics {
         const ctx = this.GetRenderingContext2D();
         ctx.font = font;
         return ctx.measureText(text);
     }
 
     // 保存当前状态
-    Save() {
+    Save(): void {
         const ctx = this.GetRenderingContext2D();
         ctx.save();
     }
 
     // 裁剪区域
-    Clip(x, y, width, height) {
+    Clip(x: number, y: number, width: number, height: number): void {
         const ctx = this.GetRenderingContext2D();
         ctx.beginPath();
         ctx.rect(x, y, width, height);
@@ -225,30 +225,30 @@ class IPainter {
     }
 
     // 恢复之前保存的状态
-    Restore() {
+    Restore(): void {
         const ctx = this.GetRenderingContext2D();
         ctx.restore();
     }
 
     // 平移
-    Translation(x, y) {
+    Translation(x: number, y: number): void {
         const ctx = this.GetRenderingContext2D();
         ctx.translate(x, y);
     }
 
     // 旋转
-    Rotate(angle) {
+    Rotate(angle: number): void {
         const ctx = this.GetRenderingContext2D();
         ctx.rotate(angle * Math.PI / 180);
     }
 
     // 缩放
-    Scale(sx, sy) {
+    Scale(sx: number, sy: number): void {
         const ctx = this.GetRenderingContext2D();
         ctx.scale(sx, sy);
     }
 
-    Test() {
+    Test(): void {
         // 测试直线
         this.StrokeLine(10, 10, 200, 10, 'red', 2);
         // 测试矩形
@@ -277,7 +277,4 @@ class IPainter {
     }
 }
 
-export { IPainter };// 该接口定义了各种绘制方法，如绘制线条、矩形、圆角矩形、圆弧、扇形、多边形和文本等
-// 每个方法都接受相应的参数，如位置、尺寸、颜色和线宽等
-// 这些方法使用CanvasRenderingContext2D对象进行实际的绘制操作
-// 通过实现该接口，可以为不同的窗口提供自定义的绘制逻辑
+export { IPainter };

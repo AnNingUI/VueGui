@@ -1,8 +1,17 @@
-import { IPainter } from "./IPainter.js";
-import { IRoot } from "./IRoot.js";
+import { IPainter } from "./IPainter.ts";
+import { IRoot } from "./IRoot.ts";
 
-class IWindow {
-    constructor(window_painter) {
+export class IWindow {
+    protected m_window_painter: IPainter;
+    protected m_window_width: number;
+    protected m_window_height: number;
+    protected m_refresh_viewport_x: number;
+    protected m_refresh_viewport_y: number;
+    protected m_refresh_viewport_width: number;
+    protected m_refresh_viewport_height: number;
+    protected m_root: IRoot;
+
+    constructor(window_painter: IPainter) {
         // 窗口画刷
         this.m_window_painter = window_painter;
 
@@ -21,14 +30,14 @@ class IWindow {
     }
 
     // inline methods
-    GetWindowWidth() { return this.m_window_width; }
-    GetWindowHeight() { return this.m_window_height; }
-    GetWindowPainter() { return this.m_window_painter; }
-    GetRoot() { return this.m_root; }
+    GetWindowWidth(): number { return this.m_window_width; }
+    GetWindowHeight(): number { return this.m_window_height; }
+    GetWindowPainter(): IPainter { return this.m_window_painter; }
+    GetRoot(): IRoot { return this.m_root; }
 
     // virtual methods
     // 重绘需要刷新的区域
-    Render() {
+    Render(): void {
         const window_painter = this.GetWindowPainter();
         const root = this.GetRoot();
         if (this.m_refresh_viewport_width === 0 || this.m_refresh_viewport_height === 0) {
@@ -54,7 +63,7 @@ class IWindow {
 
     // 刷新窗口的局部区域
     // 合并调用的所有局部区域获的刷新区域的最小包围盒， 也就是下一帧需要绘制的区域
-    Refresh(x, y, width, height) {
+    Refresh(x: number = 0, y: number = 0, width: number = 0, height: number = 0): void {
         const window_width = this.m_window_width;
         const window_height = this.m_window_height;
         let min_x = x;
@@ -83,7 +92,7 @@ class IWindow {
     }
 
     // 窗口大小更新
-    OnSize(width, height) {
+    OnSize(width: number, height: number): void {
         if (this.m_window_width == width || this.m_window_height == height) {
             return;
         }
@@ -99,42 +108,42 @@ class IWindow {
         this.GetRoot().SetLayoutChanged(true);
     }
 
-    OnMouseDown(x, y, button) {
+    OnMouseDown(x: number, y: number, button: number): void {
         // button: 0 - left, 1 - middle, 2 - right
     }
 
-    OnMouseMove(x, y) {
+    OnMouseMove(x: number, y: number): void {
         // 处理鼠标移动事件
     }
 
-    OnMouseUp(x, y, button) {
+    OnMouseUp(x: number, y: number, button: number): void {
         // button: 0 - left, 1 - middle, 2 - right
     }
 
-    OnMouseWheel(delta) {
+    OnMouseWheel(delta: number): void {
         // delta: positive - scroll up, negative - scroll down
     }
 
-    OnKeyDown(key) {
+    OnKeyDown(key: string): void {
         // key: e.g., 'a', 'Enter', 'ArrowUp', etc.
     }
 
-    OnKeyUp(key) {
+    OnKeyUp(key: string): void {
         // key: e.g., 'a', 'Enter', 'ArrowUp', etc.
     }
 
     // 加载字体
-    async LoadFont(font_name, font_url) {
+    async LoadFont(font_name: string, font_url: string): Promise<FontFace> {
        try {
             // 创建 FontFace 对象
             const font = new FontFace(font_name, `url(${font_url})`);
-            
+
             // 将字体添加到文档字体集合中
             document.fonts.add(font);
-            
+
             // 等待字体加载完成
             await font.load();
-            
+
             console.log(`Font ${font_name} loaded successfully.`);
             return font; // 返回字体对象，便于后续使用
         } catch (error) {
@@ -144,13 +153,19 @@ class IWindow {
     }
 }
 
-class CanvasWindow extends IWindow {
-    constructor(canvas) {
-        super(new IPainter(canvas.getContext('2d')));
+export class CanvasWindow extends IWindow {
+    private m_canvas: HTMLCanvasElement;
+
+    constructor(canvas: HTMLCanvasElement) {
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('无法获取 2D 渲染上下文');
+        }
+        super(new IPainter(ctx));
         this.m_canvas = canvas;
 
         this.OnSize(canvas.width, canvas.height);
-        canvas.addEventListener('resize', (e) => {
+        canvas.addEventListener('resize', (_e) => {
             this.OnSize(canvas.width, canvas.height);
         });
         canvas.addEventListener('mousedown', (e) => {
@@ -172,6 +187,10 @@ class CanvasWindow extends IWindow {
             this.OnKeyUp(e.key);
         });
     }
+
+    GetCanvas(): HTMLCanvasElement {
+        return this.m_canvas;
+    }
 }
 
-export { IWindow, CanvasWindow };
+export { CanvasWindow as default };
