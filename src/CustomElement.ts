@@ -6,6 +6,7 @@ type CustomElementConstructor = () => IElement;
 
 const custom_element_constructors: Record<string, CustomElementConstructor> = {};
 
+
 custom_element_constructors["character"] = () => new Character();
 custom_element_constructors["icon"] = () => new Icon();
 custom_element_constructors["button"] = () => new IButton();
